@@ -410,9 +410,9 @@ static cocos2d::CCTouch *s_pTouches[MAX_TOUCHES];
                 return;
             }
             
-            pTouch = s_pTouches[unUsedIndex] = new cocos2d::CCTouch();
             float x = [touch locationInView: [touch view]].x;
             float y = [touch locationInView: [touch view]].y;
+            pTouch = s_pTouches[unUsedIndex] = new cocos2d::CCTouch(0, x, y);
             pTouch->SetTouchInfo(0, x, y, unUsedIndex);
             
             CFDictionaryAddValue(touchesIntergerDict, touch, [NSNumber numberWithInt:unUsedIndex]);
