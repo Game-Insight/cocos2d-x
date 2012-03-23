@@ -57,6 +57,7 @@ THE SOFTWARE.
 #endif // CC_ENABLE_PROFILERS
 
 #include <string>
+#include "CCUserConfig.h"
 
 using namespace std;
 using namespace cocos2d;
@@ -285,6 +286,9 @@ void CCDirector::setOpenGLView(CC_GLVIEW *pobOpenGLView)
 
 		// set size
 		m_obWinSizeInPoints = m_pobOpenGLView->getSize();
+#ifdef WIN_SIZE
+		m_obWinSizeInPoints = CCSize(WIN_WIDTH,WIN_HEIGHT);
+#endif
 		m_obWinSizeInPixels = CCSizeMake(m_obWinSizeInPoints.width * m_fContentScaleFactor, m_obWinSizeInPoints.height * m_fContentScaleFactor);
         setGLDefaultValues();
 
@@ -313,8 +317,12 @@ void CCDirector::setProjection(ccDirectorProjection kProjection)
 	case kCCDirectorProjection2D:
         if (m_pobOpenGLView) 
         {
-            m_pobOpenGLView->setViewPortInPoints(0, 0, size.width, size.height);
-        }
+#ifdef WIN_SIZE
+			m_pobOpenGLView->setViewPortInPoints(0, m_pobOpenGLView->getSize().height - WIN_HEIGHT, size.width, size.height);
+#else
+			m_pobOpenGLView->setViewPortInPoints(0, 0, size.width, size.height);
+#endif
+		}
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		ccglOrtho(0, size.width, 0, size.height, -1024 * CC_CONTENT_SCALE_FACTOR(), 
