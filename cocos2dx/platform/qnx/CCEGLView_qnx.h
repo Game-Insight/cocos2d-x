@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include <EGL/egl.h>
 #include <screen/screen.h>
 
+#include <bps/event.h>
 namespace   cocos2d {
 class CCSet;
 class CCTouch;
@@ -39,11 +40,20 @@ class EGLTouchDelegate;
 class CC_DLL CCEGLView
 {
 public:
+class CC_DLL EventHandler
+	{
+	public:
+		virtual bool HandleBPSEvent(bps_event_t* event) = 0;
+
+	    virtual ~EventHandler() {}
+	};
+public:
     CCEGLView();
     virtual ~CCEGLView();
 
     CCSize  getSize();
     bool    isOpenGLReady();
+    bool    isIpad();
 	/**
 	 * the width and height is the real size of phone
 	 */
@@ -55,6 +65,8 @@ public:
 	bool    Create(int width, int height);
     EGLTouchDelegate* getDelegate(void);
     
+	void    setEventHandler(EventHandler* pHandler);
+    const char* getWindowGroupId() const;
     // keep compatible
     void    release();
     void    setTouchDelegate(EGLTouchDelegate * pDelegate);
@@ -66,6 +78,8 @@ public:
 	CCRect  getViewPort();
 	float   getScreenScaleFactor();
     void    setIMEKeyboardState(bool bOpen);
+    
+    float   getMainScreenScale() { return 1.0f; }
 
     bool 	HandleEvents();
 
@@ -102,8 +116,11 @@ private:
 	bool    			m_bNotHVGA;
 	bool				m_isGLInitialized;
 	
+	EventHandler*		m_pEventHandler;
 	EGLTouchDelegate   *m_pDelegate;
 	float  				m_fScreenScaleFactor;
+
+	bool 				m_isWindowActive;
 
 	static bool 		m_initializedFunctions;
 	static const GLubyte *m_extensions;
@@ -114,6 +131,7 @@ private:
     screen_event_t 	 m_screenEvent;
     screen_window_t  m_screenWindow;
     screen_context_t m_screenContext;
+    char 			 m_window_group_id[16];
 };
 
 }   // end of namespace   cocos2d

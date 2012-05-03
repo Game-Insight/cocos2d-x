@@ -57,11 +57,11 @@ bool MenuLayer::initWithEntryID(int entryId)
 	view->setScale(15);
 	view->setAnchorPoint( ccp(0,0) );
 	view->setPosition( ccp(s.width/2, s.height/3) );
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_MARMALADE)
-	CCLabelBMFont* label = CCLabelBMFont::labelWithString(view->title().c_str(),  "fonts/arial16.fnt");
-#else	
+//#if (CC_TARGET_PLATFORM == CC_PLATFORM_MARMALADE)
+//	CCLabelBMFont* label = CCLabelBMFont::labelWithString(view->title().c_str(),  "fonts/arial16.fnt");
+//#else	
 	CCLabelTTF* label = CCLabelTTF::labelWithString(view->title().c_str(), "Arial", 28);
-#endif
+//#endif
 	addChild(label, 1);
 	label->setPosition( ccp(s.width/2, s.height-50) );
 
@@ -137,8 +137,8 @@ bool MenuLayer::ccTouchBegan(CCTouch* touch, CCEvent* event)
 
 void MenuLayer::ccTouchMoved(CCTouch* touch, CCEvent* event)
 {
-	CCPoint touchLocation = touch->locationInView( touch->view() );	
-	CCPoint prevLocation = touch->previousLocationInView( touch->view() );	
+	CCPoint touchLocation = touch->locationInView();	
+	CCPoint prevLocation = touch->previousLocationInView();	
 	
 	touchLocation = CCDirector::sharedDirector()->convertToGL( touchLocation );
 	prevLocation = CCDirector::sharedDirector()->convertToGL( prevLocation );
@@ -223,7 +223,7 @@ void Box2DView::registerWithTouchDispatcher()
 
 bool Box2DView::ccTouchBegan(CCTouch* touch, CCEvent* event)
 {
-	CCPoint touchLocation = touch->locationInView( touch->view() );	
+	CCPoint touchLocation = touch->locationInView();	
 	touchLocation = CCDirector::sharedDirector()->convertToGL( touchLocation );
 
 	CCPoint nodePosition = convertToNodeSpace( touchLocation );
@@ -234,7 +234,7 @@ bool Box2DView::ccTouchBegan(CCTouch* touch, CCEvent* event)
 
 void Box2DView::ccTouchMoved(CCTouch* touch, CCEvent* event)
 {
-	CCPoint touchLocation = touch->locationInView( touch->view() );	
+	CCPoint touchLocation = touch->locationInView();	
 	touchLocation = CCDirector::sharedDirector()->convertToGL( touchLocation );
 	CCPoint nodePosition = convertToNodeSpace( touchLocation );
 	
@@ -243,7 +243,7 @@ void Box2DView::ccTouchMoved(CCTouch* touch, CCEvent* event)
 
 void Box2DView::ccTouchEnded(CCTouch* touch, CCEvent* event)
 {
-	CCPoint touchLocation = touch->locationInView( touch->view() );	
+	CCPoint touchLocation = touch->locationInView();	
 	touchLocation = CCDirector::sharedDirector()->convertToGL( touchLocation );
 	CCPoint nodePosition = convertToNodeSpace( touchLocation );
 	

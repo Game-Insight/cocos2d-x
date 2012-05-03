@@ -47,11 +47,14 @@ public:
 
     CCSize  getSize();
     bool    isOpenGLReady();
+    bool    isIpad();
     void    release();
     void    setTouchDelegate(EGLTouchDelegate * pDelegate);
     void    swapBuffers();
     bool    canSetContentScaleFactor();
     void    setContentScaleFactor(float contentScaleFactor);
+    
+    float getMainScreenScale() { return -1.0f; }
 
 	virtual bool Create(LPCTSTR pTitle, int w, int h);
 	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
@@ -67,6 +70,8 @@ public:
     void resize(int width, int height);
     void centerWindow();
     void setScreenScale(float factor);
+	typedef void (*LPFN_ACCELEROMETER_KEYHOOK)( UINT message,WPARAM wParam, LPARAM lParam );
+	void setAccelerometerKeyHook( LPFN_ACCELEROMETER_KEYHOOK lpfnAccelerometerKeyHook );
 
     // static function
 
@@ -94,6 +99,7 @@ private:
     SIZE                m_tSizeInPoints;
     float               m_fScreenScaleFactor;
     RECT                m_rcViewPort;
+	LPFN_ACCELEROMETER_KEYHOOK	m_lpfnAccelerometerKeyHook;
 };
 
 NS_CC_END;

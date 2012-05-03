@@ -32,9 +32,11 @@
 #include "CCTouch.h"
 #include "CCTouchDispatcher.h"
 #include "CCKeypadDispatcher.h"
+#include "CCIMEDispatcher.h"
 #include "ccMacros.h"
 
 #include <stdlib.h>
+#include <s3eOSReadString.h>
 
 NS_CC_BEGIN;
 
@@ -83,7 +85,8 @@ CCEGLView::CCEGLView()
     }
     
     // Register keyboard event handler
-	s3eKeyboardRegister(S3E_KEYBOARD_KEY_EVENT, &KeyEventHandler, this);
+//	s3eKeyboardRegister(S3E_KEYBOARD_KEY_EVENT, &KeyEventHandler, this);
+//	s3eKeyboardRegister(S3E_KEYBOARD_CHAR_EVENT, &CharEventHandler, this);
 }
 
 void CCEGLView::setFrameWidthAndHeight(int width, int height)
@@ -147,7 +150,7 @@ void CCEGLView::setTouch(void* systemData)
 	{
 	case S3E_POINTER_STATE_DOWN :
 		m_bCaptured = true;
-		m_pTouch->SetTouchInfo(0, (float)event->m_x, (float)event->m_y);
+		m_pTouch->SetTouchInfo((float)event->m_x, (float)event->m_y);
 		m_pSet->addObject(m_pTouch);
 		m_pDelegate->touchesBegan(m_pSet, NULL);
 		break;
@@ -155,7 +158,7 @@ void CCEGLView::setTouch(void* systemData)
 	case S3E_POINTER_STATE_UP :
 		if (m_bCaptured)
 		{
-			m_pTouch->SetTouchInfo(0, (float)event->m_x, (float)event->m_y);
+			m_pTouch->SetTouchInfo((float)event->m_x, (float)event->m_y);
 			m_pDelegate->touchesEnded(m_pSet, NULL);
 			m_pSet->removeObject(m_pTouch);
 			m_bCaptured = false;
@@ -169,7 +172,7 @@ void CCEGLView::setMotionTouch(void* systemData)
 		s3ePointerMotionEvent* event =(s3ePointerMotionEvent*)systemData;
 		if (m_bCaptured)
 		{
-            m_pTouch->SetTouchInfo(0, (float)event->m_x, (float)event->m_y);
+            m_pTouch->SetTouchInfo((float)event->m_x, (float)event->m_y);
             m_pDelegate->touchesMoved(m_pSet, NULL);
 
 		}
@@ -190,14 +193,14 @@ void CCEGLView::setMultiTouch(void* systemData)
 	switch (event->m_Pressed)
 	{
         case S3E_POINTER_STATE_DOWN :
-            m_pTouch->SetTouchInfo(0, (float)event->m_x, (float)event->m_y);
+            m_pTouch->SetTouchInfo((float)event->m_x, (float)event->m_y);
             m_pSet->addObject(m_pTouch);
             m_pDelegate->touchesBegan(m_pSet, NULL);
             break;
             
         case S3E_POINTER_STATE_UP :
             {
-                m_pTouch->SetTouchInfo(0, (float)event->m_x, (float)event->m_y);
+                m_pTouch->SetTouchInfo((float)event->m_x, (float)event->m_y);
                 m_pDelegate->touchesEnded(m_pSet, NULL);
                 m_pSet->removeObject(m_pTouch);
                 touchSet[event->m_TouchID] = NULL;
@@ -212,49 +215,46 @@ void CCEGLView::setMultiMotionTouch(void* systemData)
      m_pTouch = touchSet[event->m_TouchID];
     if (m_pTouch)
     {
-        m_pTouch->SetTouchInfo((int)event, (float)event->m_x, (float)event->m_y);
+        m_pTouch->SetTouchInfo((float)event->m_x, (float)event->m_y);
         m_pDelegate->touchesMoved(m_pSet, NULL);
         
     }
 }
 
-CCTouch* CCEGLView::findTouch(int id) 
-{
-    CCSetIterator iter;
-	for (iter = m_pSet->begin(); iter != m_pSet->end(); ++iter)
-	{
-        CCTouch *touch = (CCTouch*)*iter;
-                
-		if(touch->view() == id)
-            return touch;
-	}
-    
-    return NULL;
-}
-
 
 void CCEGLView::setKeyTouch(void* systemData)
 {
-    s3eKeyboardEvent* event = (s3eKeyboardEvent*)systemData;
-	if (event->m_Pressed)
-	{
-		if (event->m_Key!=m_Key)
-		{
-			CCKeypadDispatcher::sharedDispatcher()->dispatchKeypadMSG(kTypeMenuClicked);
-		}
-		else
-		{
-			CCKeypadDispatcher::sharedDispatcher()->dispatchKeypadMSG(kTypeBackClicked);
+// 	s3eKeyboardEvent* event = (s3eKeyboardEvent*)systemData;
+// 	if (event->m_Pressed)
+// 	{
+// 		if (event->m_Key!=m_Key)
+// 		{
+// 			CCKeypadDispatcher::sharedDispatcher()->dispatchKeypadMSG(kTypeMenuClicked);
+// 		}
+// 		else
+// 		{
+// 			CCKeypadDispatcher::sharedDispatcher()->dispatchKeypadMSG(kTypeBackClicked);
+// 
+// 		}
+// 		m_Key =event->m_Key;
+// 	}
+}
 
-		}
-	m_Key =event->m_Key;
-	}
-
+void CCEGLView::setCharTouch( void* systemData )
+{
+//     s3eKeyboardCharEvent* event = (s3eKeyboardCharEvent*)systemData;
+// 	s3eWChar c = event->m_Char ;
+// 	CCIMEDispatcher::sharedDispatcher()->dispatchInsertText((const char *)&c, 1);
 }
 
 bool CCEGLView::isOpenGLReady()
 {
     return (IwGLIsInitialised() && m_sSizeInPixel.width != 0 && m_sSizeInPixel.height !=0);
+}
+
+bool CCEGLView::isIpad()
+{
+    return false;
 }
 
 void CCEGLView::release()
@@ -272,7 +272,8 @@ void CCEGLView::release()
         s3ePointerUnRegister(S3E_POINTER_MOTION_EVENT, &MotionEventHandler);
     }
     
-	s3eKeyboardUnRegister(S3E_KEYBOARD_KEY_EVENT, &KeyEventHandler);
+//	s3eKeyboardUnRegister(S3E_KEYBOARD_KEY_EVENT, &KeyEventHandler);
+//	s3eKeyboardUnRegister(S3E_KEYBOARD_KEY_EVENT, &CharEventHandler);
 
 	if (IwGLIsInitialised())
   		IwGLTerminate();
@@ -344,6 +345,16 @@ void CCEGLView::setScissorInPoints(float x, float y, float w, float h)
             (GLint)w,
             (GLint)h);
     }		
+}
+
+void CCEGLView::setIMEKeyboardState(bool bOpen)
+{
+	if(bOpen && s3eOSReadStringAvailable() == S3E_TRUE) {
+		const char* inputText = s3eOSReadStringUTF8("") ;
+		if( inputText!=0 ) {
+			CCIMEDispatcher::sharedDispatcher()->dispatchInsertText(inputText, strlen(inputText));
+		}
+	}
 }
 
 CCEGLView& CCEGLView::sharedOpenGLView()

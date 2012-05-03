@@ -12,8 +12,9 @@ INCLUDES = -I.. \
 					-I../platform/third_party/linux/libpng \
 					-I../platform/third_party/linux/libxml2 \
 					-I../platform/third_party/linux/libjpeg 
-
-DEFINES = -DLINUX
+					
+# add -DUSE_FONTCONFIG if you want to use libfontconfig 					
+DEFINES = -DLINUX 
 
 OBJECTS = ../actions/CCAction.o \
 					../actions/CCActionCamera.o \
@@ -38,6 +39,7 @@ OBJECTS = ../actions/CCAction.o \
 					../cocoa/CCZone.o \
 					../effects/CCGrabber.o \
 					../effects/CCGrid.o \
+					../extensions/CCNotificationCenter.o \
 					../keypad_dispatcher/CCKeypadDelegate.o \
 					../keypad_dispatcher/CCKeypadDispatcher.o \
 					../label_nodes/CCLabelAtlas.o \
@@ -65,8 +67,8 @@ OBJECTS = ../actions/CCAction.o \
 					../platform/CCStdC.o \
 					../platform/CCThread.o \
 					../platform/platform.o \
-					../platform/Linux/CCAplication_linux.o \
-					../platform/Linux/CCEGLView_linux.o \
+					../platform/linux/CCApplication_linux.o \
+					../platform/linux/CCEGLView_linux.o \
 					../script_support/CCScriptSupport.o \
 					../sprite_nodes/CCAnimation.o \
 					../sprite_nodes/CCAnimationCache.o \
@@ -118,6 +120,7 @@ STATICLIBS = $(STATICLIBS_DIR)/libfreetype.a \
 						$(STATICLIBS_DIR)/libpng.a \
 						$(STATICLIBS_DIR)/libjpeg.a
 
+# add -lfontconfig if you want to use libfontconfig
 SHAREDLIBS = -lglfw -lGL
 
 ####### Build rules

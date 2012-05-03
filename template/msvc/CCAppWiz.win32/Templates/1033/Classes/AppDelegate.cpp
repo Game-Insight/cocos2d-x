@@ -1,26 +1,21 @@
-#include "AppDelegate.h"
-
 #include "cocos2d.h"
-[! if CC_USE_COCOS_DENSHION_SIMPLE_AUDIO_ENGINE]
-#include "SimpleAudioEngine.h"
-using namespace CocosDenshion;
-
-[! endif]
-[! if !CC_USE_LUA]
-
+#include "CCEGLView.h"
+#include "AppDelegate.h"
+[! if CC_USE_LUA]
+#include "CCLuaEngine.h"
+[! else]
 #include "HelloWorldScene.h"
 [! endif]
+[! if CC_USE_COCOS_DENSHION_SIMPLE_AUDIO_ENGINE]
+#include "SimpleAudioEngine.h"
 
-#include "CCEGLView.h"
+using namespace CocosDenshion;
+[! endif]
 
 USING_NS_CC;
 
 AppDelegate::AppDelegate()
-[! if CC_USE_LUA]
-:m_pLuaEngine(NULL)
-[! endif]
 {
-
 }
 
 AppDelegate::~AppDelegate()
@@ -28,17 +23,12 @@ AppDelegate::~AppDelegate()
 [! if CC_USE_COCOS_DENSHION_SIMPLE_AUDIO_ENGINE]
     SimpleAudioEngine::end();
 [! endif]
-[! if CC_USE_LUA]
-
-    CCScriptEngineManager::sharedScriptEngineManager()->removeScriptEngine();
-    CC_SAFE_DELETE(m_pLuaEngine);
-[! endif]
 }
 
 bool AppDelegate::initInstance()
 {
     bool bRet = false;
-    do 
+    do
     {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
 
@@ -67,19 +57,6 @@ bool AppDelegate::initInstance()
 
 #endif  // CC_PLATFORM_ANDROID
 
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_WOPHONE)
-
-		// Initialize OpenGLView instance, that release by CCDirector when application terminate.
-		// The HelloWorld is designed as HVGA.
-		CCEGLView* pMainWnd = new CCEGLView(this);
-		CC_BREAK_IF(! pMainWnd || ! pMainWnd->Create(320,480, WM_WINDOW_ROTATE_MODE_CW));
-
-#ifndef _TRANZDA_VM_  
-		// on wophone emulator, we copy resources files to Work7/NEWPLUS/TDA_DATA/Data/ folder instead of zip file
-		cocos2d::CCFileUtils::setResource("HelloWorld.zip");
-#endif
-
-#endif  // CC_PLATFORM_WOPHONE
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_MARMALADE)
 		// MaxAksenov said it's NOT a very elegant solution. I agree, haha
 		CCDirector::sharedDirector()->setDeviceOrientation(kCCDeviceOrientationLandscapeLeft);
@@ -132,8 +109,8 @@ bool AppDelegate::applicationDidFinishLaunching()
 
 [! if CC_USE_LUA]
     // register lua engine
-    m_pLuaEngine = new LuaEngine; 
-    CCScriptEngineManager::sharedScriptEngineManager()->setScriptEngine(m_pLuaEngine);
+    CCScriptEngineProtocol* pEngine = CCLuaEngine::engine();
+    CCScriptEngineManager::sharedManager()->setScriptEngine(pEngine);
 
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
     unsigned long size;
@@ -147,15 +124,16 @@ bool AppDelegate::applicationDidFinishLaunching()
         memcpy(pCodes, pFileContent, size);
         delete[] pFileContent;
 
-        CCScriptEngineManager::sharedScriptEngineManager()->getScriptEngine()->executeString(pCodes);
+        pEngine->executeString(pCodes);
         delete []pCodes;
     }
 #endif
 
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_IOS) || (CC_TARGET_PLATFORM == CC_PLATFORM_MARMALADE)
     string path = CCFileUtils::fullPathFromRelativePath("hello.lua");
-    CCScriptEngineManager::sharedScriptEngineManager()->getScriptEngine()->executeScriptFile(path.c_str());
-#endif 
+    pEngine->addSearchPath(path.substr(0, path.find_last_of("/")).c_str());
+    pEngine->executeScriptFile(path.c_str());
+#endif
 [! else]
     // create a scene. it's an autorelease object
     CCScene *pScene = HelloWorld::scene();

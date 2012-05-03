@@ -13,6 +13,8 @@
 
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
 	#define MUSIC_FILE		"music.mid"
+#elif (CC_TARGET_PLATFORM == CC_PLATFORM_QNX)
+	#define MUSIC_FILE		"background.ogg"
 #else
 	#define MUSIC_FILE		"background.mp3"
 #endif // CC_PLATFORM_WIN32
@@ -56,11 +58,11 @@ m_nSoundId(0)
 
 	for (int i = 0; i < m_nTestCount; ++i)
 	{
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_MARMALADE)
-		CCLabelBMFont* label = CCLabelBMFont::labelWithString(testItems[i].c_str(),  "fonts/arial16.fnt");
-#else
+//#if (CC_TARGET_PLATFORM == CC_PLATFORM_MARMALADE)
+//		CCLabelBMFont* label = CCLabelBMFont::labelWithString(testItems[i].c_str(),  "fonts/arial16.fnt");
+//#else
         CCLabelTTF* label = CCLabelTTF::labelWithString(testItems[i].c_str(), "Arial", 24);
-#endif		
+//#endif		
         CCMenuItemLabel* pMenuItem = CCMenuItemLabel::itemWithLabel(label, this, menu_selector(CocosDenshionTest::menuCallback));
 		
 		m_pItmeMenu->addChild(pMenuItem, i + 10000);
@@ -189,7 +191,7 @@ void CocosDenshionTest::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent)
 	CCSetIterator it = pTouches->begin();
 	CCTouch* touch = (CCTouch*)(*it);
 
-	m_tBeginPos = touch->locationInView( touch->view() );	
+	m_tBeginPos = touch->locationInView();	
 	m_tBeginPos = CCDirector::sharedDirector()->convertToGL( m_tBeginPos );
 }
 
@@ -198,7 +200,7 @@ void CocosDenshionTest::ccTouchesMoved(CCSet *pTouches, CCEvent *pEvent)
 	CCSetIterator it = pTouches->begin();
 	CCTouch* touch = (CCTouch*)(*it);
 
-	CCPoint touchLocation = touch->locationInView( touch->view() );	
+	CCPoint touchLocation = touch->locationInView();	
 	touchLocation = CCDirector::sharedDirector()->convertToGL( touchLocation );
 	float nMoveY = touchLocation.y - m_tBeginPos.y;
 

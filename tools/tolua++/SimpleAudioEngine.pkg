@@ -23,46 +23,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ****************************************************************************/
 
-namespace CocosDenshion {
-
-/**
-@class          SimpleAudioEngine
-@brief  		offer a VERY simple interface to play background music & sound effect
-*/
 class SimpleAudioEngine
 {
-    SimpleAudioEngine();
-    ~SimpleAudioEngine();
-
     /**
     @brief Get the shared Engine object,it will new one when first time be called
     */
     static SimpleAudioEngine* sharedEngine();
 
     /**
-    @brief Release the shared Engine object
-    @warning It must be called before the application exit, or a memroy leak will be casued.
-    */
-	static void end();
-
-    /**
     @brief  Set the zip file name
     @param pszZipFileName The relative path of the .zip file
     */
-    static void setResource(const char* pszZipFileName);
+    static void setResource(char* pszZipFileName);
 
     /**
      @brief Preload background music
      @param pszFilePath The path of the background music file,or the FileName of T_SoundResInfo
      */
-    void preloadBackgroundMusic(const char* pszFilePath);
-    
+    void preloadBackgroundMusic(char* pszFilePath);
+
     /**
     @brief Play background music
     @param pszFilePath The path of the background music file,or the FileName of T_SoundResInfo
     @param bLoop Whether the background music loop or not
     */
-    void playBackgroundMusic(const char* pszFilePath, bool bLoop = false);
+    void playBackgroundMusic(char* pszFilePath, bool bLoop = false);
 
     /**
     @brief Stop playing background music
@@ -120,9 +105,9 @@ class SimpleAudioEngine
     /**
     @brief Play sound effect
     @param pszFilePath The path of the effect file,or the FileName of T_SoundResInfo
-	@bLoop Whether to loop the effect playing, default value is false
+    @bLoop Whether to loop the effect playing, default value is false
     */
-    unsigned int playEffect(const char* pszFilePath, bool bLoop = false);
+    unsigned int playEffect(char* pszFilePath, bool bLoop = false);
 
     /**
     @brief Stop playing sound effect
@@ -132,16 +117,14 @@ class SimpleAudioEngine
 
     /**
     @brief  		preload a compressed audio file
-    @details	    the compressed audio will be decode to wave, then write into an 
+    @details	    the compressed audio will be decode to wave, then write into an
     internal buffer in SimpleaudioEngine
     */
-    void preloadEffect(const char* pszFilePath);
+    void preloadEffect(char* pszFilePath);
 
     /**
     @brief  		unload the preloaded effect from internal buffer
     @param[in]		pszFilePath		The path of the effect file,or the FileName of T_SoundResInfo
     */
-    void unloadEffect(const char* pszFilePath);
+    void unloadEffect(char* pszFilePath);
 };
-
-} // end of namespace CocosDenshion

@@ -55,6 +55,7 @@ public:
 	CCRect  getFrame();
     CCSize  getSize();
     bool    isOpenGLReady();
+    bool    isIpad();
     void    release();
     void    setTouchDelegate(EGLTouchDelegate * pDelegate);
     void    swapBuffers();
@@ -71,6 +72,8 @@ public:
 	@brief	get the shared main open gl window
 	*/
 	static CCEGLView& sharedOpenGLView();
+	
+	float getMainScreenScale() { return -1.0f; }
 
 	/*
 	 * param

@@ -23,11 +23,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ****************************************************************************/
-
+#include <pthread.h>
+#include <semaphore.h>
 #include <stack>
 #include <string>
 #include <cctype>
 #include <queue>
+#include <list>
+
 #include "CCTextureCache.h"
 #include "CCTexture2D.h"
 #include "ccMacros.h"
@@ -38,16 +41,14 @@ THE SOFTWARE.
 #include "CCImage.h"
 #include "support/ccUtils.h"
 #include "CCScheduler.h"
-#include "pthread.h"
 #include "CCThread.h"
-#include "semaphore.h"
 
 namespace   cocos2d {
 
 typedef struct _AsyncStruct
 {
 	std::string			filename;
-	SelectorProtocol	*target;
+	CCObject	*target;
 	SEL_CallFuncO		selector;
 } AsyncStruct;
 
@@ -64,6 +65,7 @@ static pthread_mutex_t		s_asyncStructQueueMutex;
 static pthread_mutex_t      s_ImageInfoMutex;
 
 static sem_t s_sem;
+static bool need_quit;
 
 static std::queue<AsyncStruct*>		*s_pAsyncStructQueue;
 static std::queue<ImageInfo*>		*s_pImageQueue;
@@ -103,7 +105,10 @@ static void* loadImage(void* data)
         if (pQueue->empty())
         {
             pthread_mutex_unlock(&s_asyncStructQueueMutex);
-            continue;
+	if (need_quit)
+		break;
+	else
+		continue;
         }
         else
         {
@@ -171,7 +176,8 @@ CCTextureCache::CCTextureCache()
 CCTextureCache::~CCTextureCache()
 {
 	CCLOGINFO("cocos2d: deallocing CCTextureCache.");
-
+	need_quit = true;
+	sem_post(&s_sem);
 	CC_SAFE_RELEASE(m_pTextures);
 }
 
@@ -188,7 +194,7 @@ char * CCTextureCache::description()
 	return ret;
 }
 
-void CCTextureCache::addImageAsync(const char *path, SelectorProtocol *target, SEL_CallFuncO selector)
+void CCTextureCache::addImageAsync(const char *path, CCObject *target, SEL_CallFuncO selector)
 {
 	CCAssert(path != NULL, "TextureCache: fileimage MUST not be NULL");	
 
@@ -197,7 +203,7 @@ void CCTextureCache::addImageAsync(const char *path, SelectorProtocol *target, S
 	// optimization
 
 	std::string pathKey = path;
-	CCFileUtils::ccRemoveHDSuffixFromFile(pathKey);
+	CCFileUtils::removeSuffixFromFile(pathKey);
 
 	pathKey = CCFileUtils::fullPathFromRelativePath(pathKey.c_str());
 	texture = m_pTextures->objectForKey(pathKey);
@@ -215,7 +221,7 @@ void CCTextureCache::addImageAsync(const char *path, SelectorProtocol *target, S
 
 	if (target)
 	{
-		dynamic_cast<CCObject*>(target)->retain();
+		target->retain();
 	}
 
 	// lazy init
@@ -231,7 +237,7 @@ void CCTextureCache::addImageAsync(const char *path, SelectorProtocol *target, S
 		pthread_create(&s_loadingThread, NULL, loadImage, NULL);
 
 		CCScheduler::sharedScheduler()->scheduleSelector(schedule_selector(CCTextureCache::addImageAsyncCallBack), this, 0, false);
-
+		need_quit = false;
 		firstRun = false;
 	}
 
@@ -268,7 +274,7 @@ void CCTextureCache::addImageAsyncCallBack(ccTime dt)
 		AsyncStruct *pAsyncStruct = pImageInfo->asyncStruct;
 		CCImage *pImage = pImageInfo->image;
 
-		SelectorProtocol *target = pAsyncStruct->target;
+		CCObject *target = pAsyncStruct->target;
 		SEL_CallFuncO selector = pAsyncStruct->selector;
 		const char* filename = pAsyncStruct->filename.c_str();
 
@@ -295,7 +301,7 @@ void CCTextureCache::addImageAsyncCallBack(ccTime dt)
 		if (target && selector)
 		{
 			(target->*selector)(texture);
-			dynamic_cast<CCObject*>(target)->release();
+			target->release();
 		}		
 
 		delete pImage;
@@ -317,7 +323,7 @@ CCTexture2D * CCTextureCache::addImage(const char * path)
 
 	// remove possible -HD suffix to prevent caching the same image twice (issue #1040)
     std::string pathKey = path;
-	CCFileUtils::ccRemoveHDSuffixFromFile(pathKey);
+	CCFileUtils::removeSuffixFromFile(pathKey);
 
     pathKey = CCFileUtils::fullPathFromRelativePath(pathKey.c_str());
 	texture = m_pTextures->objectForKey(pathKey);
@@ -346,8 +352,10 @@ CCTexture2D * CCTextureCache::addImage(const char * path)
                 unsigned char* pBuffer = data.getBuffer();
                 CC_BREAK_IF(! image.initWithImageData((void*)pBuffer, nSize, CCImage::kFmtJpg));
 
+                ccResolutionType resolution;
+                fullpath = CCFileUtils::fullPathFromRelativePath(fullpath.c_str(), &resolution);
 				texture = new CCTexture2D();
-				texture->initWithImage(&image);
+				texture->initWithImage(&image, resolution);
 
 				if( texture )
 				{
@@ -374,8 +382,10 @@ CCTexture2D * CCTextureCache::addImage(const char * path)
                 unsigned char* pBuffer = data.getBuffer();
                 CC_BREAK_IF(! image.initWithImageData((void*)pBuffer, nSize, CCImage::kFmtPng));
 
+                ccResolutionType resolution;
+                fullpath = CCFileUtils::fullPathFromRelativePath(fullpath.c_str(), &resolution);
 				texture = new CCTexture2D();
-				texture->initWithImage(&image);
+				texture->initWithImage(&image, resolution);
 
 				if( texture )
 				{
@@ -410,7 +420,7 @@ CCTexture2D* CCTextureCache::addPVRTCImage(const char* path, int bpp, bool hasAl
 	CCTexture2D * texture;
 
 	std::string temp(path);
-    CCFileUtils::ccRemoveHDSuffixFromFile(temp);
+    CCFileUtils::removeSuffixFromFile(temp);
     
 	if ( (texture = m_pTextures->objectForKey(temp)) )
 	{
@@ -446,7 +456,7 @@ CCTexture2D * CCTextureCache::addPVRImage(const char* path)
 	CCTexture2D * tex;
 	std::string key(path);
     // remove possible -HD suffix to prevent caching the same image twice (issue #1040)
-    CCFileUtils::ccRemoveHDSuffixFromFile(key);
+    CCFileUtils::removeSuffixFromFile(key);
     
 	if( (tex = m_pTextures->objectForKey(key)) ) 
 	{
@@ -458,6 +468,10 @@ CCTexture2D * CCTextureCache::addPVRImage(const char* path)
 	tex = new CCTexture2D();
 	if( tex->initWithPVRFile(fullpath.c_str()) )
 	{
+#if CC_ENABLE_CACHE_TEXTTURE_DATA
+        // cache the texture file name
+        VolatileTexture::addImageTexture(tex, fullpath.c_str(), CCImage::kFmtRawData);
+#endif
 		m_pTextures->setObject(tex, key);
 		tex->autorelease();
 	}
@@ -494,7 +508,7 @@ CCTexture2D* CCTextureCache::addUIImage(CCImage *image, const char *key)
 
 		// prevents overloading the autorelease pool
 		texture = new CCTexture2D();
-		texture->initWithImage(image);
+		texture->initWithImage(image, kCCResolutionUnknown);
 
 		if(key && texture)
 		{
@@ -520,17 +534,26 @@ void CCTextureCache::removeAllTextures()
 
 void CCTextureCache::removeUnusedTextures()
 {
-	std::vector<std::string> keys = m_pTextures->allKeys();
-	std::vector<std::string>::iterator it;
-	for (it = keys.begin(); it != keys.end(); ++it)
-	{
-		CCTexture2D *value = m_pTextures->objectForKey(*it);
-		if (value->retainCount() == 1)
-		{
-			CCLOG("cocos2d: CCTextureCache: removing unused texture: %s", (*it).c_str());
-			m_pTextures->removeObjectForKey(*it);
-		}
-	}
+	if (m_pTextures->begin())
+    {
+        CCTexture2D *texture = NULL;
+        std::string key;
+        std::list<std::string> keysToRemove;
+        while ((texture = m_pTextures->next(&key)) != NULL)
+        {
+            if (texture->retainCount() == 1)
+            {
+                keysToRemove.push_back(key);
+            }
+        };
+        m_pTextures->end();
+        
+        for (std::list<std::string>::iterator it=keysToRemove.begin(); it!=keysToRemove.end(); ++it)
+        {
+            CCLOG("cocos2d: CCTextureCache: removing unused texture: %s", (*it).c_str());             
+            m_pTextures->removeObjectForKey(*it);
+        }
+    } 
 }
 
 void CCTextureCache::removeTexture(CCTexture2D* texture)
@@ -727,22 +750,39 @@ void VolatileTexture::reloadAllTextures()
 
 		switch (vt->m_eCashedImageType)
 		{
-		case kImageFile:
-			{
-				CCImage image;
-				CCFileData data(vt->m_strFileName.c_str(), "rb");
-				unsigned long nSize  = data.getSize();
-				unsigned char* pBuffer = data.getBuffer();
+        case kImageFile:
+            {
+                CCImage image;
+                std::string lowerCase(vt->m_strFileName.c_str());
+                for (unsigned int i = 0; i < lowerCase.length(); ++i)
+                {
+                    lowerCase[i] = tolower(lowerCase[i]);
+                }
 
-				if (image.initWithImageData((void*)pBuffer, nSize, vt->m_FmtImage))
-				{
+                if (std::string::npos != lowerCase.find(".pvr")) 
+                {
                     CCTexture2DPixelFormat oldPixelFormat = CCTexture2D::defaultAlphaPixelFormat();
                     CCTexture2D::setDefaultAlphaPixelFormat(vt->m_PixelFormat);
-					vt->texture->initWithImage(&image);
+
+                    vt->texture->initWithPVRFile(vt->m_strFileName.c_str());
                     CCTexture2D::setDefaultAlphaPixelFormat(oldPixelFormat);
-				}
-			}
-			break;
+                } 
+                else 
+                {
+                    CCFileData data(vt->m_strFileName.c_str(), "rb");
+                    unsigned long nSize  = data.getSize();
+                    unsigned char* pBuffer = data.getBuffer();
+
+                    if (image.initWithImageData((void*)pBuffer, nSize, vt->m_FmtImage))
+                    {
+                        CCTexture2DPixelFormat oldPixelFormat = CCTexture2D::defaultAlphaPixelFormat();
+                        CCTexture2D::setDefaultAlphaPixelFormat(vt->m_PixelFormat);
+                        vt->texture->initWithImage(&image);
+                        CCTexture2D::setDefaultAlphaPixelFormat(oldPixelFormat);
+                    }
+                }
+            }
+            break;
 		case kImageData:
 			{
 				unsigned int nPOTWide, nPOTHigh;

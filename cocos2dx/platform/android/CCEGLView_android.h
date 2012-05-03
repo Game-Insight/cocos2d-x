@@ -40,6 +40,7 @@ public:
 
     CCSize  getSize();
     bool    isOpenGLReady();
+    bool    isIpad();
 	/**
 	 * the width and height is the real size of phone
 	 */
@@ -62,6 +63,8 @@ public:
 	CCRect  getViewPort();
 	float   getScreenScaleFactor();
     void    setIMEKeyboardState(bool bOpen);
+    
+    float   getMainScreenScale() { return -1.0f; }
 
 	// static function
 	/**

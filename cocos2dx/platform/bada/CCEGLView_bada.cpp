@@ -30,6 +30,7 @@ THE SOFTWARE.
 #include "CCAccelerometer_bada.h"
 #include "CCIMEDispatcher.h"
 #include <FText.h>
+#include <string>
 
 using namespace std;
 using namespace Osp::Base;
@@ -241,6 +242,11 @@ CCRect CCEGLView::getFrame()
 	return rc;
 }
 
+bool CCEGLView::isIpad()
+{
+    return false;
+}
+
 bool CCEGLView::isOpenGLReady()
 {
     return (NULL != m_pEGL);
@@ -419,8 +425,8 @@ void CCEGLView::onTouchesBegin(int id[], float x[], float y[], int pointerNumber
 		if (E_OBJ_NOT_FOUND == r && NULL == pTouch)
 		{
 			pTouch = new CCTouch();
-			pTouch->SetTouchInfo(0, (x[i] - m_rcViewPort.origin.x) / m_fScreenScaleFactor,
-					             (y[i] - m_rcViewPort.origin.y) / m_fScreenScaleFactor, id[i]);
+			pTouch->SetTouchInfo((x[i] - m_rcViewPort.origin.x) / m_fScreenScaleFactor,
+					             (y[i] - m_rcViewPort.origin.y) / m_fScreenScaleFactor);
 			s_mapTouches.Add(id[i], pTouch);
 			set.addObject(pTouch);
 			m_pDelegate->touchesBegan(&set, NULL);
@@ -443,8 +449,8 @@ void CCEGLView::onTouchesMove(int id[], float x[], float y[], int pointerNumber)
 
 		if (E_SUCCESS == r && pTouch != NULL)
 		{
-			pTouch->SetTouchInfo(0, (x[i] - m_rcViewPort.origin.x) / m_fScreenScaleFactor,
-								(y[i] - m_rcViewPort.origin.y) / m_fScreenScaleFactor, id[i]);
+			pTouch->SetTouchInfo((x[i] - m_rcViewPort.origin.x) / m_fScreenScaleFactor,
+								(y[i] - m_rcViewPort.origin.y) / m_fScreenScaleFactor);
 			set.addObject(pTouch);
 		}
 		else
@@ -467,8 +473,8 @@ void CCEGLView::onTouchesEnd(int id[], float x[], float y[], int pointerNumber)
 		r = s_mapTouches.GetValue(id[i], pTouch);
 		if (E_SUCCESS == r && pTouch != NULL)
 		{
-			pTouch->SetTouchInfo(0, (x[i] - m_rcViewPort.origin.x) / m_fScreenScaleFactor,
-		                        (y[i] - m_rcViewPort.origin.y) / m_fScreenScaleFactor, id[i]);
+			pTouch->SetTouchInfo((x[i] - m_rcViewPort.origin.x) / m_fScreenScaleFactor,
+		                        (y[i] - m_rcViewPort.origin.y) / m_fScreenScaleFactor);
 			set.addObject(pTouch);
 			s_mapTouches.Remove(id[i]);
 			pTouch->release();

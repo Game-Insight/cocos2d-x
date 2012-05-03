@@ -42,6 +42,7 @@ public:
     CCSize  getSize();
     bool    isOpenGLReady();
     bool    canSetContentScaleFactor();
+    bool    isIpad();
     void    setContentScaleFactor(float contentScaleFactor);
     
     // keep compatible
@@ -55,6 +56,8 @@ public:
     void touchesMoved(CCSet *set);
     void touchesEnded(CCSet *set);
     void touchesCancelled(CCSet *set);
+    
+    float getMainScreenScale();
     
     void setIMEKeyboardState(bool bOpen);
     

@@ -45,6 +45,7 @@ public:
 
     CCSize	getSize();
     bool	isOpenGLReady();
+    bool    isIpad();
 	/**
 	 * the width and height is the real size of phone
 	 */
@@ -64,8 +65,11 @@ public:
     void	setContentScaleFactor(float contentScaleFactor);
 	void	setViewPortInPoints(float x, float y, float w, float h);
     void	setScissorInPoints(float x, float y, float w, float h);
+    void	setIMEKeyboardState(bool bOpen);
 	CCRect	getViewPort();
 	float	getScreenScaleFactor();
+	
+	float getMainScreenScale() { return 1.0f; }
 
 	// static function
 	/**
@@ -98,8 +102,8 @@ private:
     void	setMultiTouch(void* systemData);
 	void	setMultiMotionTouch(void* systemData);
 	void	setKeyTouch(void* systemData);
-    
-    CCTouch* findTouch(int id);
+	void	setCharTouch(void* systemData);
+
     CCTouch* touchSet[S3E_POINTER_TOUCH_MAX];
 
 	static int32 TouchEventHandler(void* systemData, void* userData)
@@ -129,6 +133,12 @@ private:
 	static int32 KeyEventHandler(void* systemData, void* userData)
 	{
 		((CCEGLView*)userData)->setKeyTouch(systemData);
+		return 0;
+	}
+
+	static int32 CharEventHandler(void* systemData, void* userData)
+	{
+		((CCEGLView*)userData)->setCharTouch(systemData);
 		return 0;
 	}
 };
